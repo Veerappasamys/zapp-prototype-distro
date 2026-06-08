@@ -55,7 +55,8 @@ const DISTRO_MANIFEST_URL =
     process.env.ZAPP_DISTRO_MANIFEST_URL ||
     'https://raw.githubusercontent.com/Veerappasamys/zapp-prototype-distro/main/latest.json';
 const DISTRO_BOOTSTRAP_URL =
-    'https://raw.githubusercontent.com/Veerappasamys/zapp-prototype-distro/main/bootstrap.mjs';
+    process.env.ZAPP_DISTRO_BOOTSTRAP_URL ||
+    'https://cdn.jsdelivr.net/gh/Veerappasamys/zapp-prototype-distro@main/bootstrap.mjs';
 
 function forwardArgs() {
     const args = process.argv.slice(2).filter(Boolean);
