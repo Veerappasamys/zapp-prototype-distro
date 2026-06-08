@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Self-contained bootstrap published to zapp-prototype-distro (curl … | node).
- * @distro-version 0.2.4
+ * @distro-version 0.3.0
  */
 import crypto from 'node:crypto';
 import fs from 'node:fs';
@@ -257,12 +257,14 @@ function runInitFromSkill(skillRoot, kitRoot) {
 
 async function tryDistroBootstrap() {
     let tarballUrl = DEFAULT_TARBALL_URL;
+    let fallbackUrl;
     let expectedSha256;
 
     if (!tarballUrl) {
         try {
             const manifest = await fetchDistroManifest();
             tarballUrl = manifest.tarballUrl;
+            fallbackUrl = manifest.tarballUrlFallback;
             expectedSha256 = manifest.sha256;
             console.log(`Using prototype kit v${manifest.version ?? 'unknown'} from public distro`);
         } catch (err) {
@@ -271,7 +273,15 @@ async function tryDistroBootstrap() {
         }
     }
 
-    const { kitRoot } = await ensureKitFromTarball(tarballUrl, expectedSha256);
+    let kitRoot;
+    try {
+        ({ kitRoot } = await ensureKitFromTarball(tarballUrl, expectedSha256));
+    } catch (err) {
+        if (!fallbackUrl || fallbackUrl === tarballUrl) throw err;
+        console.warn(`CDN download failed (${err.message}); retrying from ${fallbackUrl}`);
+        ({ kitRoot } = await ensureKitFromTarball(fallbackUrl, expectedSha256));
+    }
+
     const skillRoot = resolveSkillSandbox(kitRoot);
     runInitFromSkill(skillRoot, kitRoot);
     return true;

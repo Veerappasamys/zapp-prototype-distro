@@ -1,0 +1,22 @@
+<svg width="360" height="1340" viewBox="0 0 360 1340" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="360" height="350" fill="url(#paint0_linear_551_3683)"/>
+<mask id="mask0_551_3683" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="360" height="1340">
+<rect width="360" height="1340" fill="url(#paint1_radial_551_3683)"/>
+</mask>
+<g mask="url(#mask0_551_3683)">
+<ellipse cx="371.828" cy="334.957" rx="119" ry="121.309" fill="#143075"/>
+<ellipse cx="35.9999" cy="-5.38873" rx="169.727" ry="180.961" fill="#917BFF"/>
+<foreignObject x="-154" y="-154" width="668" height="1648"><div xmlns="http://www.w3.org/1999/xhtml" style="backdrop-filter:blur(77px);clip-path:url(#bgblur_0_551_3683_clip_path);height:100%;width:100%"></div></foreignObject><rect data-figma-bg-blur-radius="154" width="360" height="1340" fill="#00265E" fill-opacity="0.4"/>
+</g>
+<defs>
+<clipPath id="bgblur_0_551_3683_clip_path" transform="translate(154 154)"><rect width="360" height="1340"/>
+</clipPath><linearGradient id="paint0_linear_551_3683" x1="180" y1="0" x2="182.776" y2="340.655" gradientUnits="userSpaceOnUse">
+<stop stop-color="#00337F"/>
+<stop offset="0.676479" stop-color="#00214F"/>
+</linearGradient>
+<radialGradient id="paint1_radial_551_3683" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(180) rotate(90) scale(1107.12 288.69)">
+<stop stop-color="#2D6FC4"/>
+<stop offset="1" stop-color="#013380"/>
+</radialGradient>
+</defs>
+</svg>
