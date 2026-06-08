@@ -8,9 +8,42 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
-import { resolveKitCacheRoot } from './kit-cache.mjs';
 
 const USER_CWD = process.cwd();
+
+function isWritableDirectory(dir) {
+    try {
+        fs.mkdirSync(dir, { recursive: true });
+        const probe = path.join(dir, `.write-probe-${process.pid}`);
+        fs.writeFileSync(probe, 'ok');
+        fs.unlinkSync(probe);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+function resolveKitCacheRoot(workspaceCwd) {
+    if (process.env.ZAPP_KIT_CACHE) {
+        return path.resolve(process.env.ZAPP_KIT_CACHE);
+    }
+
+    const homeCache = path.join(os.homedir(), '.zapp-prototype-kit');
+    if (isWritableDirectory(homeCache)) {
+        return homeCache;
+    }
+
+    const workspaceCache = path.join(workspaceCwd, '.zapp-prototype-kit');
+    if (!isWritableDirectory(workspaceCache)) {
+        throw new Error(
+            `Cannot write kit cache to ${homeCache} or ${workspaceCache}. ` +
+                'Set ZAPP_KIT_CACHE to a writable path inside your workspace.'
+        );
+    }
+
+    console.log(`Using workspace kit cache (sandbox): ${workspaceCache}`);
+    return workspaceCache;
+}
 
 const REPO_URL = process.env.ZAPP_KIT_REPO || 'https://github.com/Veerappasamys/Zapp-UI.git';
 const KIT_CACHE_ROOT = resolveKitCacheRoot(USER_CWD);
@@ -239,6 +272,10 @@ async function tryCachedTarballBootstrap() {
 }
 
 async function tryGitBootstrap() {
+    if (process.env.ZAPP_GIT_FALLBACK !== '1') {
+        return false;
+    }
+
     const repoRoot = cloneOrUpdateRepo();
     if (!repoRoot) return false;
 
