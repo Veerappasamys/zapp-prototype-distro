@@ -1,9 +1,9 @@
 {
-  "version": "0.2.3",
-  "builtAt": "2026-06-08T08:12:14.029Z",
+  "version": "0.2.4",
+  "builtAt": "2026-06-08T08:43:49.038Z",
   "bootstrapUrl": "https://cdn.jsdelivr.net/gh/Veerappasamys/zapp-prototype-distro@main/bootstrap.mjs",
   "manifestUrl": "https://raw.githubusercontent.com/Veerappasamys/zapp-prototype-distro/main/latest.json",
-  "tarballUrl": "https://raw.githubusercontent.com/Veerappasamys/zapp-prototype-distro/main/kit/zapp-prototype-kit-0.2.3.tar.gz",
-  "checksumUrl": "https://raw.githubusercontent.com/Veerappasamys/zapp-prototype-distro/main/kit/zapp-prototype-kit-0.2.3.tar.gz.sha256",
-  "sha256": "647d5929126864e3bff09e5223b6958e121b3ea5fcff38bfc855ec198e2ad9e4"
+  "tarballUrl": "https://raw.githubusercontent.com/Veerappasamys/zapp-prototype-distro/main/kit/zapp-prototype-kit-0.2.4.tar.gz",
+  "checksumUrl": "https://raw.githubusercontent.com/Veerappasamys/zapp-prototype-distro/main/kit/zapp-prototype-kit-0.2.4.tar.gz.sha256",
+  "sha256": "958af5dd268b88d9dbf21ad33d0109950a7e0a7e2a6869dc6bc41b6cf53c3fcc"
 }

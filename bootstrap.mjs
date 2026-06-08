@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Self-contained bootstrap published to zapp-prototype-distro (curl … | node).
- * @distro-version 0.2.2
+ * @distro-version 0.2.4
  */
 import crypto from 'node:crypto';
 import fs from 'node:fs';
@@ -25,25 +25,31 @@ function isWritableDirectory(dir) {
 }
 
 function resolveKitCacheRoot(workspaceCwd) {
+    // 1. Explicit override always wins.
     if (process.env.ZAPP_KIT_CACHE) {
         return path.resolve(process.env.ZAPP_KIT_CACHE);
     }
 
+    // 2. Workspace-local cache FIRST. Sandboxes (Codex, Cursor) only grant writes
+    //    inside the open project, so probing $HOME first triggers a permission
+    //    prompt — or a hard "not allowed to write" failure. Staying inside the
+    //    workspace is always allowed and needs no approval.
+    const workspaceCache = path.join(workspaceCwd, '.zapp-prototype-kit');
+    if (isWritableDirectory(workspaceCache)) {
+        return workspaceCache;
+    }
+
+    // 3. Shared HOME cache only as a fallback (read-only workspace, e.g. CI).
     const homeCache = path.join(os.homedir(), '.zapp-prototype-kit');
     if (isWritableDirectory(homeCache)) {
         return homeCache;
     }
 
-    const workspaceCache = path.join(workspaceCwd, '.zapp-prototype-kit');
-    if (!isWritableDirectory(workspaceCache)) {
-        throw new Error(
-            `Cannot write kit cache to ${homeCache} or ${workspaceCache}. ` +
-                'Set ZAPP_KIT_CACHE to a writable path inside your workspace.'
-        );
-    }
-
-    console.log(`Using workspace kit cache (sandbox): ${workspaceCache}`);
-    return workspaceCache;
+    throw new Error(
+        `Cannot write kit cache to ${workspaceCache} or ${homeCache}. ` +
+            'Set ZAPP_KIT_CACHE to a writable path inside your workspace, e.g.\n' +
+            '  ZAPP_KIT_CACHE="$(pwd)/.zapp-prototype-kit" node zapp-bootstrap.mjs'
+    );
 }
 
 const REPO_URL = process.env.ZAPP_KIT_REPO || 'https://github.com/Veerappasamys/Zapp-UI.git';
@@ -65,15 +71,21 @@ function forwardArgs() {
     return args;
 }
 
-function privateRepoHelp() {
+function bootstrapHelp() {
     return `
-Prototype bootstrap failed. Designers/PMs should use the public distro:
+Prototype bootstrap could not complete. This installer only needs the PUBLIC distro —
+no private repo or special access is required. To retry:
 
-  curl -fsSL ${DISTRO_BOOTSTRAP_URL} | node
+  1. Make sure you are inside the folder you want the prototype in:
+       cd "<your-project-folder>"
 
-If that fails in a sandbox (Codex, etc.), cache lands in ./.zapp-prototype-kit inside your workspace.
+  2. Download the bootstrap, then run the saved file (sandbox-safe — no curl|node pipe):
+       curl -fsSL ${DISTRO_BOOTSTRAP_URL} -o zapp-bootstrap.mjs
+       node zapp-bootstrap.mjs
 
-The Zapp-UI git clone fallback requires private repo access — designers should use the curl distro only.
+The kit cache is written to ./.zapp-prototype-kit inside this folder, so it works in
+sandboxes (Codex, Cursor) without any $HOME or admin permission. If a network step is
+blocked, approve network access for that one command and run it again.
 `.trim();
 }
 
@@ -314,12 +326,12 @@ async function main() {
     if (await tryCachedTarballBootstrap()) return;
     if (await tryGitBootstrap()) return;
 
-    console.error(privateRepoHelp());
+    console.error(bootstrapHelp());
     process.exit(1);
 }
 
 main().catch((err) => {
     console.error(err.message || err);
-    console.error(privateRepoHelp());
+    console.error(bootstrapHelp());
     process.exit(1);
 });
