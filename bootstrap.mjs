@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
  * Self-contained bootstrap published to zapp-prototype-distro (curl … | node).
+ * @distro-version 0.2.2
  */
 import crypto from 'node:crypto';
 import fs from 'node:fs';
