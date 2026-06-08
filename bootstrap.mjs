@@ -8,12 +8,13 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
+import { resolveKitCacheRoot } from './kit-cache.mjs';
 
 const USER_CWD = process.cwd();
 
 const REPO_URL = process.env.ZAPP_KIT_REPO || 'https://github.com/Veerappasamys/Zapp-UI.git';
-const CACHE_DIR = path.join(os.homedir(), '.zapp-prototype-kit', 'repo');
-const KIT_CACHE_ROOT = path.join(os.homedir(), '.zapp-prototype-kit');
+const KIT_CACHE_ROOT = resolveKitCacheRoot(USER_CWD);
+const CACHE_DIR = path.join(KIT_CACHE_ROOT, 'repo');
 const KIT_BUNDLE_DIR = path.join(KIT_CACHE_ROOT, 'bundle');
 const DEFAULT_TARBALL_URL = process.env.ZAPP_KIT_TARBALL_URL || '';
 const DISTRO_MANIFEST_URL =
@@ -35,9 +36,9 @@ Prototype bootstrap failed. Designers/PMs should use the public distro:
 
   curl -fsSL ${DISTRO_BOOTSTRAP_URL} | node
 
-If that fails, a maintainer must publish: npm run publish:prototype-distro -- --push
+If that fails in a sandbox (Codex, etc.), cache lands in ./.zapp-prototype-kit inside your workspace.
 
-Dev fallback: clone Zapp-UI with SSH and run npm run zapp:init
+The Zapp-UI git clone fallback requires private repo access — designers should use the curl distro only.
 `.trim();
 }
 
