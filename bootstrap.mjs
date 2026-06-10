@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Self-contained bootstrap published to zapp-prototype-distro (curl … | node).
- * @distro-version 0.4.2
+ * @distro-version 0.5.0
  */
 import crypto from 'node:crypto';
 import fs from 'node:fs';
@@ -30,31 +30,21 @@ function resolveKitCacheRoot(workspaceCwd) {
         return path.resolve(process.env.ZAPP_KIT_CACHE);
     }
 
-    // 2. Workspace-local cache FIRST. Sandboxes (Codex, Cursor) only grant writes
-    //    inside the open project, so probing $HOME first triggers a permission
-    //    prompt — or a hard "not allowed to write" failure. Staying inside the
-    //    workspace is always allowed and needs no approval.
+    // Workspace-local cache ONLY — never $HOME. The kit cache stays inside the
+    // folder you run in, so there are no home-directory or admin writes.
     const workspaceCache = path.join(workspaceCwd, '.zapp-prototype-kit');
     if (isWritableDirectory(workspaceCache)) {
         return workspaceCache;
     }
 
-    // 3. Shared HOME cache only as a fallback (read-only workspace, e.g. CI).
-    const homeCache = path.join(os.homedir(), '.zapp-prototype-kit');
-    if (isWritableDirectory(homeCache)) {
-        return homeCache;
-    }
-
     throw new Error(
-        `Cannot write kit cache to ${workspaceCache} or ${homeCache}. ` +
+        `Cannot write kit cache to ${workspaceCache}. ` +
             'Set ZAPP_KIT_CACHE to a writable path inside your workspace, e.g.\n' +
             '  ZAPP_KIT_CACHE="$(pwd)/.zapp-prototype-kit" node zapp-bootstrap.mjs'
     );
 }
 
-const REPO_URL = process.env.ZAPP_KIT_REPO || 'https://github.com/Veerappasamys/Zapp-UI.git';
 const KIT_CACHE_ROOT = resolveKitCacheRoot(USER_CWD);
-const CACHE_DIR = path.join(KIT_CACHE_ROOT, 'repo');
 const KIT_BUNDLE_DIR = path.join(KIT_CACHE_ROOT, 'bundle');
 const DEFAULT_TARBALL_URL = process.env.ZAPP_KIT_TARBALL_URL || '';
 const DISTRO_MANIFEST_URL =
@@ -218,24 +208,6 @@ async function fetchDistroManifest() {
     return manifest;
 }
 
-function cloneOrUpdateRepo() {
-    fs.mkdirSync(path.dirname(CACHE_DIR), { recursive: true });
-
-    if (fs.existsSync(path.join(CACHE_DIR, '.git'))) {
-        console.log('Updating ProtoKit cache...');
-        const pull = spawnSync('git', ['-C', CACHE_DIR, 'pull', '--ff-only'], { stdio: 'inherit' });
-        if (pull.status !== 0) console.warn('git pull failed — using cached copy.');
-        return CACHE_DIR;
-    }
-
-    if (fs.existsSync(CACHE_DIR)) fs.rmSync(CACHE_DIR, { recursive: true, force: true });
-
-    console.log(`Cloning ProtoKit from ${REPO_URL}...`);
-    const clone = spawnSync('git', ['clone', '--depth', '1', REPO_URL, CACHE_DIR], { stdio: 'inherit' });
-    if (clone.status !== 0) return null;
-    return CACHE_DIR;
-}
-
 function runInitFromSkill(skillRoot, kitRoot) {
     const runInit = path.join(skillRoot, 'scripts/run-init.mjs');
     if (!fs.existsSync(runInit)) {
@@ -295,46 +267,9 @@ async function tryCachedTarballBootstrap() {
     return true;
 }
 
-async function tryGitBootstrap() {
-    if (process.env.ZAPP_GIT_FALLBACK !== '1') {
-        return false;
-    }
-
-    const repoRoot = cloneOrUpdateRepo();
-    if (!repoRoot) return false;
-
-    const skillScripts = path.join(repoRoot, '.agents/skills/zapp-prototype/scripts');
-    const ensureKit = path.join(skillScripts, 'ensure-kit.mjs');
-    const runInit = path.join(skillScripts, 'run-init.mjs');
-
-    if (!fs.existsSync(runInit)) {
-        console.error('run-init.mjs not found in cloned repo.');
-        process.exit(1);
-    }
-
-    console.log('\nBuilding ProtoKit (skill + UDS + 4 tabs)...');
-    const kitResult = spawnSync(process.execPath, [ensureKit], { cwd: repoRoot, stdio: 'inherit' });
-    if (kitResult.status !== 0) process.exit(kitResult.status ?? 1);
-
-    const kitDir = path.join(repoRoot, '.agents/skills/zapp-prototype/assets/kit');
-    if (fs.existsSync(path.join(kitDir, 'kit-manifest.json'))) {
-        process.env.ZAPP_KIT_DIR = kitDir;
-    }
-    process.env.ZAPP_USER_CWD = USER_CWD;
-
-    const args = [runInit, ...forwardArgs()];
-    const result = spawnSync(process.execPath, args, {
-        cwd: USER_CWD,
-        stdio: 'inherit',
-        env: process.env,
-    });
-    process.exit(result.status ?? 0);
-}
-
 async function main() {
     if (await tryDistroBootstrap()) return;
     if (await tryCachedTarballBootstrap()) return;
-    if (await tryGitBootstrap()) return;
 
     console.error(bootstrapHelp());
     process.exit(1);
