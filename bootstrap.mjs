@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Self-contained bootstrap published to zapp-prototype-distro (curl … | node).
- * @distro-version 0.5.0
+ * @distro-version 0.5.1
  */
 import crypto from 'node:crypto';
 import fs from 'node:fs';
@@ -52,7 +52,7 @@ const DISTRO_MANIFEST_URL =
     'https://raw.githubusercontent.com/Veerappasamys/zapp-prototype-distro/main/latest.json';
 const DISTRO_BOOTSTRAP_URL =
     process.env.ZAPP_DISTRO_BOOTSTRAP_URL ||
-    'https://cdn.jsdelivr.net/gh/Veerappasamys/zapp-prototype-distro@main/bootstrap.mjs';
+    'https://raw.githubusercontent.com/Veerappasamys/zapp-prototype-distro/main/bootstrap.mjs';
 
 function forwardArgs() {
     const args = process.argv.slice(2).filter(Boolean);
